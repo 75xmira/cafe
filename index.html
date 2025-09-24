@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kawaii Café Game</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      background: linear-gradient(to bottom right, #ffb6c1, #d8bfd8, #add8e6);
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+      cursor: pointer; /* encourages click to start music */
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      color: #ff69b4;
+      text-shadow: 0 0 10px #fff;
+      margin-bottom: 10px;
+    }
+
+    #helloKitty {
+      width: 120px;
+      animation: wave 2s infinite;
+      margin-bottom: 10px;
+    }
+
+    @keyframes wave {
+      0%, 100% { transform: rotate(0deg); }
+      50% { transform: rotate(10deg); }
+    }
+
+    #hud {
+      margin-bottom: 20px;
+      font-size: 1.3rem;
+      color: #444;
+    }
+
+    #gameArea {
+      background: rgba(255, 255, 255, 0.85);
+      border-radius: 25px;
+      padding: 20px;
+      width: 90%;
+      max-width: 500px;
+      text-align: center;
+      box-shadow: 0 0 20px rgba(255, 182, 193, 0.8);
+    }
+
+    .customer {
+      font-size: 2rem;
+      margin: 15px 0;
+      animation: bounce 1s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .menu {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 20px;
+    }
+
+    .item {
+      font-size: 2rem;
+      background: #fff;
+      border-radius: 15px;
+      padding: 15px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      transition: transform 0.2s, background 0.3s;
+    }
+
+    .item:hover {
+      transform: scale(1.2);
+      background: #ffe4f0;
+    }
+
+    #gameOver {
+      display: none;
+      margin-top: 20px;
+    }
+
+    #gameOver h2 {
+      color: #ff1493;
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(45deg, #ff69b4, #ba55d3);
+      color: white;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    button:hover {
+      transform: scale(1.1);
+    }
+
+    .heart {
+      position: absolute;
+      top: 20px;
+      animation: float 5s infinite linear;
+      font-size: 1.5rem;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(0); opacity: 1; }
+      50% { transform: translateY(-30px); opacity: 0.7; }
+      100% { transform: translateY(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <h1>🍓 Kawaii Café 🍩</h1>
+  <img id="helloKitty" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR0YyevXtkvXTQI59R7tzY14FkaukPiPkSAlA&s" alt="Hello Kitty">
+
+  <div id="hud">Score: <span id="score">0</span> | Lives: <span id="lives">3</span></div>
+
+  <div id="gameArea">
+    <div class="customer" id="customer">A customer wants... 🍰</div>
+    <div class="menu">
+      <div class="item" onclick="serve('🍰')">🍰</div>
+      <div class="item" onclick="serve('☕')">☕</div>
+      <div class="item" onclick="serve('🍵')">🍵</div>
+      <div class="item" onclick="serve('🍩')">🍩</div>
+    </div>
+  </div>
+
+  <div id="gameOver">
+    <h2>Game Over! 💔</h2>
+    <p>Your final score: <span id="finalScore"></span></p>
+    <button onclick="restartGame()">Play Again</button>
+  </div>
+
+  <!-- Floating hearts -->
+  <div class="heart" style="left: 10%;">💖</div>
+  <div class="heart" style="left: 30%;">💖</div>
+  <div class="heart" style="left: 50%;">💖</div>
+  <div class="heart" style="left: 70%;">💖</div>
+  <div class="heart" style="left: 90%;">💖</div>
+
+  <!-- Background music -->
+  <audio id="bgMusic" loop>
+    <source src="bg-music.mp3" type="audio/mp3">
+    Your browser does not support the audio element.
+  </audio>
+
+  <script>
+    const items = ["🍰", "☕", "🍵", "🍩"];
+    let currentOrder = "";
+    let score = 0;
+    let lives = 3;
+    let timer;
+
+    const bgMusic = document.getElementById("bgMusic");
+    // Start music on first click anywhere
+    document.body.addEventListener("click", () => {
+      bgMusic.play();
+    }, { once: true });
+
+    function newOrder() {
+      currentOrder = items[Math.floor(Math.random() * items.length)];
+      document.getElementById("customer").textContent =
+        "A customer wants... " + currentOrder;
+      resetTimer();
+    }
+
+    function serve(item) {
+      if (item === currentOrder) {
+        score++;
+        document.getElementById("score").textContent = score;
+        newOrder();
+      } else {
+        loseLife();
+      }
+    }
+
+    function resetTimer() {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        loseLife();
+      }, 4000); // must serve within 4 seconds
+    }
+
+    function loseLife() {
+      lives--;
+      document.getElementById("lives").textContent = lives;
+      if (lives <= 0) {
+        endGame();
+      } else {
+        newOrder();
+      }
+    }
+
+    function endGame() {
+      clearTimeout(timer);
+      document.getElementById("gameArea").style.display = "none";
+      document.getElementById("gameOver").style.display = "block";
+    }
+
+    function restartGame() {
+      score = 0;
+      lives = 3;
+      document.getElementById("score").textContent = score;
+      document.getElementById("lives").textContent = lives;
+      document.getElementById("gameArea").style.display = "block";
+      document.getElementById("gameOver").style.display = "none";
+      newOrder();
+    }
+
+    // Start first order
+    newOrder();
+  </script>
+</body>
+</html>
